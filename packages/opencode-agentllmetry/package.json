@@ -1,6 +1,6 @@
 {
   "name": "@openagentmetry/opencode-agentllmetry",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "Apache-2.0",
   "type": "module",
   "sideEffects": false,
@@ -18,14 +18,16 @@
     }
   },
   "scripts": {
-    "build": "tsgo -p tsconfig.build.json && bun build src/index.ts --target node18 --format esm --outfile dist/index.js && bun build src/index.ts --target node18 --format cjs --outfile dist/index.cjs"
+    "build": "tsgo -p tsconfig.json && bun build src/index.ts --target node --format esm --outfile dist/index.js && bun build src/index.ts --target node --format cjs --outfile dist/index.cjs",
+    "clean": "rm -rf dist",
+    "typecheck": "tsgo -p tsconfig.json"
   },
   "dependencies": {
-    "@openagentmetry/instrumentation-opencode": "workspace:*",
-    "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/resources": "^1.24.0",
-    "@opentelemetry/sdk-trace-base": "^1.24.0",
-    "@opentelemetry/sdk-trace-node": "^1.24.0",
-    "@opentelemetry/semantic-conventions": "^1.24.0"
+    "@openagentmetry/agent-semantic-contracts": "workspace:*",
+    "@opentelemetry/api": "catalog:",
+    "@opentelemetry/resources": "catalog:",
+    "@opentelemetry/sdk-trace-base": "catalog:",
+    "@opentelemetry/sdk-trace-node": "catalog:",
+    "@opentelemetry/semantic-conventions": "catalog:"
   }
 }
