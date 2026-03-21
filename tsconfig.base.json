@@ -4,12 +4,20 @@
     "lib": ["ES2022"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "paths": {
+      "@openagentmetry/agent-semantic-contracts": [
+        "./packages/agent-semantic-contracts/src/index.ts"
+      ],
+      "@openagentmetry/opencode-agentllmetry": [
+        "./packages/opencode-agentllmetry/src/index.ts"
+      ]
+    },
     "strict": true,
     "noEmit": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "verbatimModuleSyntax": true
-  }
+    "verbatimModuleSyntax": true,
+  },
 }

@@ -22,15 +22,16 @@
     }
   },
   "scripts": {
-    "build": "bun -w run build",
-    "clean": "bun -w run clean",
+    "build": "bun run sync:versions && bun run --workspaces build",
+    "clean": "bun run --workspaces clean",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "prepare": "lefthook install",
-    "test": "bun test --pass-with-no-tests",
-    "typecheck": "bun -w run typecheck"
+    "sync:versions": "bun run scripts/sync-versions.ts",
+    "test": "bun run --workspaces --if-present test",
+    "typecheck": "bun run sync:versions && bun run --workspaces typecheck"
   },
   "devDependencies": {
     "@typescript/native-preview": "catalog:",
