@@ -3,7 +3,7 @@
 ## Repository Shape
 - Monorepo with Bun workspaces.
 - Packages live in `packages/`.
-- Current packages: `packages/agent-semantic-contracts`, `packages/instrumentation-opencode`, `packages/opencode-agentllmetry`.
+- Current packages: `packages/agent-semantic-contracts`, `packages/opencode-agentmetry`.
 - Root config lives in `package.json`, `tsconfig.base.json`, `.oxfmtrc.json`, `.oxlintrc.json`, and `lefthook.yml`.
 
 ## Package Manager

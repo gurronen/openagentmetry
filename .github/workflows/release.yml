@@ -76,12 +76,12 @@ jobs:
 
           CURRENT_VERSION="${{ steps.determine.outputs.current_version }}"
           CONTRACTS_PUBLISHED=$(check_published "@openagentmetry/agent-semantic-contracts" "$CURRENT_VERSION")
-          AGENTLLMETRY_PUBLISHED=$(check_published "@openagentmetry/opencode-agentllmetry" "$CURRENT_VERSION")
+          AGENTMETRY_PUBLISHED=$(check_published "@openagentmetry/opencode-agentmetry" "$CURRENT_VERSION")
 
           echo "contracts_published=$CONTRACTS_PUBLISHED" >> "$GITHUB_OUTPUT"
-          echo "agentllmetry_published=$AGENTLLMETRY_PUBLISHED" >> "$GITHUB_OUTPUT"
+          echo "agentmetry_published=$AGENTMETRY_PUBLISHED" >> "$GITHUB_OUTPUT"
 
-          if [ "$CONTRACTS_PUBLISHED" = 'true' ] && [ "$AGENTLLMETRY_PUBLISHED" = 'true' ]; then
+          if [ "$CONTRACTS_PUBLISHED" = 'true' ] && [ "$AGENTMETRY_PUBLISHED" = 'true' ]; then
             echo "needs_publish=false" >> "$GITHUB_OUTPUT"
           else
             echo "needs_publish=true" >> "$GITHUB_OUTPUT"
@@ -137,12 +137,12 @@ jobs:
             echo "### Packages"
             echo ""
             printf '%s\n' '- @openagentmetry/agent-semantic-contracts'
-            printf '%s\n' '- @openagentmetry/opencode-agentllmetry'
+            printf '%s\n' '- @openagentmetry/opencode-agentmetry'
             echo ""
             echo "### Installation"
             echo ""
             printf '%s\n' '```bash'
-            printf '%s\n' 'npm install @openagentmetry/opencode-agentllmetry'
+            printf '%s\n' 'npm install @openagentmetry/opencode-agentmetry'
             printf '%s\n' '```'
           } >"$BODY_FILE"
           cat "$BODY_FILE"
@@ -152,20 +152,20 @@ jobs:
             echo "EOF"
           } >>"$GITHUB_OUTPUT"
 
-      - name: Publish packages
-        if: github.event_name == 'workflow_dispatch' || (steps.determine.outputs.changed == 'true' && steps.packages.outputs.needs_publish == 'true')
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          set -euo pipefail
-
-          if [ "${{ steps.packages.outputs.contracts_published }}" != 'true' ]; then
-            npm publish --access public --provenance ./packages/agent-semantic-contracts
-          fi
-
-          if [ "${{ steps.packages.outputs.agentllmetry_published }}" != 'true' ]; then
-            npm publish --access public --provenance ./packages/opencode-agentllmetry
-          fi
+      # - name: Publish packages
+      #   if: github.event_name == 'workflow_dispatch' || (steps.determine.outputs.changed == 'true' && steps.packages.outputs.needs_publish == 'true')
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      #   run: |
+      #     set -euo pipefail
+      #
+      #     if [ "${{ steps.packages.outputs.contracts_published }}" != 'true' ]; then
+      #       npm publish --access public --provenance ./packages/agent-semantic-contracts
+      #     fi
+      #
+      #     if [ "${{ steps.packages.outputs.agentmetry_published }}" != 'true' ]; then
+      #       npm publish --access public --provenance ./packages/opencode-agentmetry
+      #     fi
 
       - name: Create GitHub release
         if: (github.event_name == 'workflow_dispatch' || steps.determine.outputs.changed == 'true') && steps.determine.outputs.tag_exists == 'false'
