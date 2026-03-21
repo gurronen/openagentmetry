@@ -58,20 +58,49 @@ jobs:
             echo "tag_exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Determine package publish state
+        id: packages
+        run: |
+          set -euo pipefail
+
+          check_published() {
+            local package_name="$1"
+            local package_version="$2"
+
+            if npm view "${package_name}@${package_version}" version >/dev/null 2>&1; then
+              echo true
+            else
+              echo false
+            fi
+          }
+
+          CURRENT_VERSION="${{ steps.determine.outputs.current_version }}"
+          CONTRACTS_PUBLISHED=$(check_published "@openagentmetry/agent-semantic-contracts" "$CURRENT_VERSION")
+          AGENTLLMETRY_PUBLISHED=$(check_published "@openagentmetry/opencode-agentllmetry" "$CURRENT_VERSION")
+
+          echo "contracts_published=$CONTRACTS_PUBLISHED" >> "$GITHUB_OUTPUT"
+          echo "agentllmetry_published=$AGENTLLMETRY_PUBLISHED" >> "$GITHUB_OUTPUT"
+
+          if [ "$CONTRACTS_PUBLISHED" = 'true' ] && [ "$AGENTLLMETRY_PUBLISHED" = 'true' ]; then
+            echo "needs_publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "needs_publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install dependencies
-        if: steps.determine.outputs.changed == 'true' && steps.determine.outputs.tag_exists == 'false'
+        if: github.event_name == 'workflow_dispatch' || (steps.determine.outputs.changed == 'true' && steps.packages.outputs.needs_publish == 'true')
         run: bun install
 
       - name: Sync package versions
-        if: steps.determine.outputs.changed == 'true' && steps.determine.outputs.tag_exists == 'false'
+        if: github.event_name == 'workflow_dispatch' || (steps.determine.outputs.changed == 'true' && steps.packages.outputs.needs_publish == 'true')
         run: bun run sync:versions
 
       - name: Build
-        if: steps.determine.outputs.changed == 'true' && steps.determine.outputs.tag_exists == 'false'
+        if: github.event_name == 'workflow_dispatch' || (steps.determine.outputs.changed == 'true' && steps.packages.outputs.needs_publish == 'true')
         run: bun run build
 
       - name: Generate release notes
-        if: steps.determine.outputs.changed == 'true' && steps.determine.outputs.tag_exists == 'false'
+        if: github.event_name == 'workflow_dispatch' || steps.determine.outputs.changed == 'true'
         id: release_notes
         run: |
           set -euo pipefail
@@ -123,20 +152,26 @@ jobs:
             echo "EOF"
           } >>"$GITHUB_OUTPUT"
 
+      - name: Publish packages
+        if: github.event_name == 'workflow_dispatch' || (steps.determine.outputs.changed == 'true' && steps.packages.outputs.needs_publish == 'true')
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ "${{ steps.packages.outputs.contracts_published }}" != 'true' ]; then
+            npm publish --access public --provenance ./packages/agent-semantic-contracts
+          fi
+
+          if [ "${{ steps.packages.outputs.agentllmetry_published }}" != 'true' ]; then
+            npm publish --access public --provenance ./packages/opencode-agentllmetry
+          fi
+
       - name: Create GitHub release
-        if: steps.determine.outputs.changed == 'true' && steps.determine.outputs.tag_exists == 'false'
+        if: (github.event_name == 'workflow_dispatch' || steps.determine.outputs.changed == 'true') && steps.determine.outputs.tag_exists == 'false'
         run: |
           gh release create "v${{ steps.determine.outputs.current_version }}" \
             --title "v${{ steps.determine.outputs.current_version }}" \
             --notes "${{ steps.release_notes.outputs.body }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish packages
-        if: steps.determine.outputs.changed == 'true' && steps.determine.outputs.tag_exists == 'false'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          set -euo pipefail
-          npm publish --access public --provenance ./packages/agent-semantic-contracts
-          npm publish --access public --provenance ./packages/opencode-agentllmetry
