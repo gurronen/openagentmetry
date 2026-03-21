@@ -1,6 +1,13 @@
-import { createOpencodeInstrumentation, type OpencodePlugin } from "@openagentmetry/instrumentation-opencode";
+import {
+  createOpencodeInstrumentation,
+  type OpencodePlugin,
+} from "@openagentmetry/instrumentation-opencode";
 import { Resource } from "@opentelemetry/resources";
-import { BatchSpanProcessor, ConsoleSpanExporter, type SpanExporter } from "@opentelemetry/sdk-trace-base";
+import {
+  BatchSpanProcessor,
+  ConsoleSpanExporter,
+  type SpanExporter,
+} from "@opentelemetry/sdk-trace-base";
 import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
 
@@ -21,15 +28,15 @@ export const setupTracing = (options: SetupTracingOptions): SetupTracingResult =
   const exporter = options.exporter ?? new ConsoleSpanExporter();
   const provider = new NodeTracerProvider({
     resource: new Resource({
-      [SemanticResourceAttributes.SERVICE_NAME]: options.serviceName
-    })
+      [SemanticResourceAttributes.SERVICE_NAME]: options.serviceName,
+    }),
   });
 
   provider.addSpanProcessor(new BatchSpanProcessor(exporter));
   provider.register();
 
   const plugin = createOpencodeInstrumentation({
-    tracerName: options.tracerName
+    tracerName: options.tracerName,
   });
 
   const plugins = options.plugins ? [...options.plugins, plugin] : [plugin];
@@ -37,6 +44,6 @@ export const setupTracing = (options: SetupTracingOptions): SetupTracingResult =
   return {
     provider,
     plugins,
-    shutdown: () => provider.shutdown()
+    shutdown: () => provider.shutdown(),
   };
 };

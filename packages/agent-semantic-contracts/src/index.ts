@@ -16,7 +16,7 @@ export const AgentAttributes = {
   permissionName: "ai.permission.name",
   permissionDecision: "ai.permission.decision",
   filePath: "ai.file.path",
-  fileByteLength: "ai.file.bytes"
+  fileByteLength: "ai.file.bytes",
 } as const;
 
 export type AgentAttributeKey = (typeof AgentAttributes)[keyof typeof AgentAttributes];
@@ -27,7 +27,7 @@ export const SpanKinds = {
   tool: "tool",
   message: "message",
   permission: "permission",
-  file: "file"
+  file: "file",
 } as const;
 
 export type SpanKind = (typeof SpanKinds)[keyof typeof SpanKinds];
@@ -36,7 +36,7 @@ export const MessageRoles = {
   user: "user",
   assistant: "assistant",
   system: "system",
-  tool: "tool"
+  tool: "tool",
 } as const;
 
 export type MessageRole = (typeof MessageRoles)[keyof typeof MessageRoles];
@@ -48,7 +48,7 @@ export const buildToolAttributes = (input: {
   executionId?: string;
 }): AttributeMap => ({
   [AgentAttributes.toolName]: input.toolName,
-  [AgentAttributes.toolExecutionId]: input.executionId
+  [AgentAttributes.toolExecutionId]: input.executionId,
 });
 
 export const buildMessageAttributes = (input: {
@@ -58,7 +58,7 @@ export const buildMessageAttributes = (input: {
 }): AttributeMap => ({
   [AgentAttributes.messageId]: input.messageId,
   [AgentAttributes.messageRole]: input.role,
-  [AgentAttributes.modelName]: input.modelName
+  [AgentAttributes.modelName]: input.modelName,
 });
 
 export const buildSessionAttributes = (input: {
@@ -70,5 +70,5 @@ export const buildSessionAttributes = (input: {
   [AgentAttributes.agentId]: input.agentId,
   [AgentAttributes.agentName]: input.agentName,
   [AgentAttributes.sessionId]: input.sessionId,
-  [AgentAttributes.sessionName]: input.sessionName
+  [AgentAttributes.sessionName]: input.sessionName,
 });

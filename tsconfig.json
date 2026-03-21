@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.base.json",
-  "files": [],
-  "references": [
-    { "path": "./packages/agent-semantic-contracts" },
-    { "path": "./packages/instrumentation-opencode" },
-    { "path": "./packages/opencode-agentllmetry" }
-  ]
-}

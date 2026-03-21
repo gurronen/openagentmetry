@@ -18,10 +18,12 @@
     }
   },
   "scripts": {
-    "build": "tsgo -p tsconfig.build.json && bun build src/index.ts --target node18 --format esm --outfile dist/index.js && bun build src/index.ts --target node18 --format cjs --outfile dist/index.cjs"
+    "build": "tsgo -p tsconfig.json && bun build src/index.ts --target node18 --format esm --outfile dist/index.js && bun build src/index.ts --target node18 --format cjs --outfile dist/index.cjs",
+    "clean": "rm -rf dist",
+    "typecheck": "tsgo -p tsconfig.json"
   },
   "dependencies": {
     "@openagentmetry/agent-semantic-contracts": "workspace:*",
-    "@opentelemetry/api": "^1.9.0"
+    "@opentelemetry/api": "catalog:"
   }
 }

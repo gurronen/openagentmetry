@@ -4,7 +4,7 @@ import {
   buildMessageAttributes,
   buildSessionAttributes,
   buildToolAttributes,
-  SpanKinds
+  SpanKinds,
 } from "@openagentmetry/agent-semantic-contracts";
 
 export type HookName =
@@ -71,7 +71,7 @@ const spanId = (() => {
 })();
 
 export const createOpencodeInstrumentation = (
-  options: InstrumentationOptions = {}
+  options: InstrumentationOptions = {},
 ): OpencodePlugin => {
   const tracer = trace.getTracer(options.tracerName ?? "opencode-instrumentation");
   const toolSpans = new Map<string, ReturnType<typeof tracer.startSpan>>();
@@ -83,8 +83,8 @@ export const createOpencodeInstrumentation = (
         const span = tracer.startSpan("session.created", {
           attributes: {
             ...buildSessionAttributes(payload),
-            ["ai.span.kind"]: SpanKinds.session
-          }
+            ["ai.span.kind"]: SpanKinds.session,
+          },
         });
         span.end();
       },
@@ -92,8 +92,8 @@ export const createOpencodeInstrumentation = (
         const span = tracer.startSpan("session.updated", {
           attributes: {
             ...buildSessionAttributes(payload),
-            ["ai.span.kind"]: SpanKinds.session
-          }
+            ["ai.span.kind"]: SpanKinds.session,
+          },
         });
         span.end();
       },
@@ -101,8 +101,8 @@ export const createOpencodeInstrumentation = (
         const span = tracer.startSpan("session.deleted", {
           attributes: {
             ...buildSessionAttributes(payload),
-            ["ai.span.kind"]: SpanKinds.session
-          }
+            ["ai.span.kind"]: SpanKinds.session,
+          },
         });
         span.end();
       },
@@ -112,10 +112,10 @@ export const createOpencodeInstrumentation = (
           attributes: {
             ...buildToolAttributes({
               toolName: payload.toolName,
-              executionId
+              executionId,
             }),
-            ["ai.span.kind"]: SpanKinds.tool
-          }
+            ["ai.span.kind"]: SpanKinds.tool,
+          },
         });
         toolSpans.set(executionId, span);
       },
@@ -125,9 +125,9 @@ export const createOpencodeInstrumentation = (
         const attributes = {
           ...buildToolAttributes({
             toolName: payload.toolName,
-            executionId
+            executionId,
           }),
-          [AgentAttributes.fileByteLength]: payload.outputBytes
+          [AgentAttributes.fileByteLength]: payload.outputBytes,
         };
 
         if (span) {
@@ -140,8 +140,8 @@ export const createOpencodeInstrumentation = (
         const fallbackSpan = tracer.startSpan("tool.execute", {
           attributes: {
             ...attributes,
-            ["ai.span.kind"]: SpanKinds.tool
-          }
+            ["ai.span.kind"]: SpanKinds.tool,
+          },
         });
         fallbackSpan.end();
       },
@@ -152,8 +152,8 @@ export const createOpencodeInstrumentation = (
             [AgentAttributes.promptTokens]: payload.promptTokens,
             [AgentAttributes.completionTokens]: payload.completionTokens,
             [AgentAttributes.totalTokens]: payload.totalTokens,
-            ["ai.span.kind"]: SpanKinds.message
-          }
+            ["ai.span.kind"]: SpanKinds.message,
+          },
         });
         span.end();
       },
@@ -164,8 +164,8 @@ export const createOpencodeInstrumentation = (
             [AgentAttributes.promptTokens]: payload.promptTokens,
             [AgentAttributes.completionTokens]: payload.completionTokens,
             [AgentAttributes.totalTokens]: payload.totalTokens,
-            ["ai.span.kind"]: SpanKinds.message
-          }
+            ["ai.span.kind"]: SpanKinds.message,
+          },
         });
         span.end();
       },
@@ -174,8 +174,8 @@ export const createOpencodeInstrumentation = (
           attributes: {
             [AgentAttributes.permissionName]: payload.name,
             [AgentAttributes.permissionDecision]: payload.decision,
-            ["ai.span.kind"]: SpanKinds.permission
-          }
+            ["ai.span.kind"]: SpanKinds.permission,
+          },
         });
         span.end();
       },
@@ -184,11 +184,11 @@ export const createOpencodeInstrumentation = (
           attributes: {
             [AgentAttributes.filePath]: payload.path,
             [AgentAttributes.fileByteLength]: payload.bytes,
-            ["ai.span.kind"]: SpanKinds.file
-          }
+            ["ai.span.kind"]: SpanKinds.file,
+          },
         });
         span.end();
-      }
-    }
+      },
+    },
   };
 };
