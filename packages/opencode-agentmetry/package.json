@@ -1,6 +1,6 @@
 {
-  "name": "@openagentmetry/opencode-agentllmetry",
-  "version": "0.1.1",
+  "name": "@openagentmetry/opencode-agentmetry",
+  "version": "0.1.2",
   "license": "Apache-2.0",
   "type": "module",
   "sideEffects": false,
@@ -15,10 +15,15 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "import": "./dist/core.js",
+      "require": "./dist/core.cjs"
     }
   },
   "scripts": {
-    "build": "tsgo -p tsconfig.json && bun build src/index.ts --target node --format esm --outfile dist/index.js && bun build src/index.ts --target node --format cjs --outfile dist/index.cjs",
+    "build": "tsgo -p tsconfig.json && bun build src/index.ts --target node --format esm --outfile dist/index.js && bun build src/index.ts --target node --format cjs --outfile dist/index.cjs && bun build src/core.ts --target node --format esm --outfile dist/core.js && bun build src/core.ts --target node --format cjs --outfile dist/core.cjs",
     "clean": "rm -rf dist",
     "typecheck": "tsgo -p tsconfig.json"
   },
@@ -29,5 +34,9 @@
     "@opentelemetry/sdk-trace-base": "catalog:",
     "@opentelemetry/sdk-trace-node": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@opencode-ai/plugin": "catalog:"
   }
 }

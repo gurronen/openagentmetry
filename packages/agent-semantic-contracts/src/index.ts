@@ -1,4 +1,4 @@
-export const SEMANTIC_CONTRACTS_VERSION = "0.1.1" as const;
+export const SEMANTIC_CONTRACTS_VERSION = "0.1.2" as const;
 
 export const AgentAttributes = {
   agentId: "ai.agent.id",

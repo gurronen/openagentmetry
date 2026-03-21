@@ -14,35 +14,33 @@
     },
     "packages/agent-semantic-contracts": {
       "name": "@openagentmetry/agent-semantic-contracts",
-      "version": "0.1.0",
+      "version": "0.1.1",
     },
-    "packages/instrumentation-opencode": {
-      "name": "@openagentmetry/instrumentation-opencode",
-      "version": "0.1.0",
+    "packages/opencode-agentmetry": {
+      "name": "@openagentmetry/opencode-agentmetry",
+      "version": "0.1.1",
       "dependencies": {
         "@openagentmetry/agent-semantic-contracts": "workspace:*",
-        "@opentelemetry/api": "catalog:",
-      },
-    },
-    "packages/opencode-agentllmetry": {
-      "name": "@openagentmetry/opencode-agentllmetry",
-      "version": "0.1.0",
-      "dependencies": {
-        "@openagentmetry/instrumentation-opencode": "workspace:*",
         "@opentelemetry/api": "catalog:",
         "@opentelemetry/resources": "catalog:",
         "@opentelemetry/sdk-trace-base": "catalog:",
         "@opentelemetry/sdk-trace-node": "catalog:",
         "@opentelemetry/semantic-conventions": "catalog:",
       },
+      "devDependencies": {
+        "@opencode-ai/plugin": "catalog:",
+        "@types/node": "catalog:",
+      },
     },
   },
   "catalog": {
+    "@opencode-ai/plugin": "^1.2.27",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/resources": "^1.24.0",
     "@opentelemetry/sdk-trace-base": "^1.24.0",
     "@opentelemetry/sdk-trace-node": "^1.24.0",
     "@opentelemetry/semantic-conventions": "^1.24.0",
+    "@types/node": "^24.0.0",
     "@typescript/native-preview": "^7.0.0-dev.20260320",
     "lefthook": "^1.7.18",
     "oxfmt": "^0.6.0",
@@ -52,9 +50,11 @@
   "packages": {
     "@openagentmetry/agent-semantic-contracts": ["@openagentmetry/agent-semantic-contracts@workspace:packages/agent-semantic-contracts"],
 
-    "@openagentmetry/instrumentation-opencode": ["@openagentmetry/instrumentation-opencode@workspace:packages/instrumentation-opencode"],
+    "@openagentmetry/opencode-agentmetry": ["@openagentmetry/opencode-agentmetry@workspace:packages/opencode-agentmetry"],
 
-    "@openagentmetry/opencode-agentllmetry": ["@openagentmetry/opencode-agentllmetry@workspace:packages/opencode-agentllmetry"],
+    "@opencode-ai/plugin": ["@opencode-ai/plugin@1.2.27", "", { "dependencies": { "@opencode-ai/sdk": "1.2.27", "zod": "4.1.8" } }, "sha512-h+8Bw9v9nghMg7T+SUCTzxlIhOrsTqXW7U0HVLGQST5DjbN7uyCUM51roZWZ8LRjGxzbzFhvPnY1bj8i+ioZyw=="],
+
+    "@opencode-ai/sdk": ["@opencode-ai/sdk@1.2.27", "", {}, "sha512-Wk0o/I+Fo+wE3zgvlJDs8Fb67KlKqX0PrV8dK5adSDkANq6r4Z25zXJg2iOir+a8ntg3rAcpel1OY4FV/TwRUA=="],
 
     "@opentelemetry/api": ["@opentelemetry/api@1.9.0", "", {}, "sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg=="],
 
@@ -118,6 +118,8 @@
 
     "@oxlint/win32-x64": ["@oxlint/win32-x64@0.18.1", "", { "os": "win32", "cpu": "x64" }, "sha512-W+aVE9Siqs6Oe3NDaDOTTOYsN9X3znl+whfqWK1EcLpqJXX1kdB8Hf45HkGjqnHoFoP96GRgUnXQHQvmUybjvg=="],
 
+    "@types/node": ["@types/node@24.12.0", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-GYDxsZi3ChgmckRT9HPU0WEhKLP08ev/Yfcq2AstjrDASOYCSXeyjDsHg4v5t4jOj7cyDX3vmprafKlWIG9MXQ=="],
+
     "@typescript/native-preview": ["@typescript/native-preview@7.0.0-dev.20260321.1", "", { "optionalDependencies": { "@typescript/native-preview-darwin-arm64": "7.0.0-dev.20260321.1", "@typescript/native-preview-darwin-x64": "7.0.0-dev.20260321.1", "@typescript/native-preview-linux-arm": "7.0.0-dev.20260321.1", "@typescript/native-preview-linux-arm64": "7.0.0-dev.20260321.1", "@typescript/native-preview-linux-x64": "7.0.0-dev.20260321.1", "@typescript/native-preview-win32-arm64": "7.0.0-dev.20260321.1", "@typescript/native-preview-win32-x64": "7.0.0-dev.20260321.1" }, "bin": { "tsgo": "bin/tsgo.js" } }, "sha512-uScJZRWRxyi1l4EWwOtuO88Gh8sUTi0itcI4oKlyNtXkqik4Y7EHfs1sfYPDuAEJO3cvW6bqohHjGx3mcXSZzQ=="],
 
     "@typescript/native-preview-darwin-arm64": ["@typescript/native-preview-darwin-arm64@7.0.0-dev.20260321.1", "", { "os": "darwin", "cpu": "arm64" }, "sha512-3LQP363bDCF/pmXqzhSCSkKXr1PpNl2elC167YFRPKRyJdrETiIwj3YAB8A6esn9D30pas5VLzfmeK/tUOf+6g=="],
@@ -163,6 +165,10 @@
     "oxlint-tsgolint": ["oxlint-tsgolint@0.1.6", "", { "optionalDependencies": { "@oxlint-tsgolint/darwin-arm64": "0.1.6", "@oxlint-tsgolint/darwin-x64": "0.1.6", "@oxlint-tsgolint/linux-arm64": "0.1.6", "@oxlint-tsgolint/linux-x64": "0.1.6", "@oxlint-tsgolint/win32-arm64": "0.1.6", "@oxlint-tsgolint/win32-x64": "0.1.6" }, "bin": { "tsgolint": "bin/tsgolint.js" } }, "sha512-o2Fx5rw1HxA/sbXMKGpKpqaEl7LSDOwS2zblXqedUWav0jFa08M+A/nE6KeQkpwdvmT7iNqZfRDCGEfIE6wQoA=="],
 
     "semver": ["semver@7.7.4", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA=="],
+
+    "undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
+
+    "zod": ["zod@4.1.8", "", {}, "sha512-5R1P+WwQqmmMIEACyzSvo4JXHY5WiAFHRMg+zBZKgKS+Q1viRa0C1hmUKtHltoIFKtIdki3pRxkmpP74jnNYHQ=="],
 
     "@opentelemetry/core/@opentelemetry/semantic-conventions": ["@opentelemetry/semantic-conventions@1.28.0", "", {}, "sha512-lp4qAiMTD4sNWW4DbKLBkfiMZ4jbAboJIGOQr5DvciMRI494OapieI9qiODpOt0XBr1LjIDy1xAGAnVs5supTA=="],
 

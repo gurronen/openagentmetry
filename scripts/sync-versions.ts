@@ -2,7 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 
 const publishablePackageJsonPaths = [
   "packages/agent-semantic-contracts/package.json",
-  "packages/opencode-agentllmetry/package.json",
+  "packages/opencode-agentmetry/package.json",
 ] as const;
 
 const semanticContractsIndexPath = "packages/agent-semantic-contracts/src/index.ts" as const;
