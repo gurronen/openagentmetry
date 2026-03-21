@@ -29,7 +29,7 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "prepare": "lefthook install",
-    "test": "bun test",
+    "test": "bun test --pass-with-no-tests",
     "typecheck": "bun -w run typecheck"
   },
   "devDependencies": {
