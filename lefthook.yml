@@ -1,0 +1,15 @@
+pre-commit:
+  commands:
+    fmt_fix:
+      run: bun run fmt
+    fmt_check:
+      run: bun run fmt:check
+    lint_fix:
+      run: bun run lint:fix
+    lint_check:
+      run: bun run lint
+
+pre-push:
+  commands:
+    tests:
+      run: bun run test

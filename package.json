@@ -1,0 +1,30 @@
+{
+  "name": "openagentmetry",
+  "private": true,
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "bun run --cwd packages/agent-semantic-contracts build && bun run --cwd packages/instrumentation-opencode build && bun run --cwd packages/opencode-agentllmetry build",
+    "clean": "rm -rf packages/*/dist",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "prepare": "lefthook install",
+    "test": "bun test",
+    "typecheck": "tsgo -b tsconfig.json"
+  },
+  "devDependencies": {
+    "@typescript/native-preview": "^7.0.0-dev.20260320",
+    "lefthook": "^1.7.18",
+    "oxfmt": "^0.6.0",
+    "oxlint": "^0.18.0",
+    "oxlint-tsgolint": "^0.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

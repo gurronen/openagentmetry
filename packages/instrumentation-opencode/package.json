@@ -1,0 +1,27 @@
+{
+  "name": "@openagentmetry/instrumentation-opencode",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsgo -p tsconfig.build.json && bun build src/index.ts --target node18 --format esm --outfile dist/index.js && bun build src/index.ts --target node18 --format cjs --outfile dist/index.cjs"
+  },
+  "dependencies": {
+    "@openagentmetry/agent-semantic-contracts": "workspace:*",
+    "@opentelemetry/api": "^1.9.0"
+  }
+}
