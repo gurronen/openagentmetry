@@ -17,30 +17,35 @@
       "@opentelemetry/sdk-trace-base": "^1.24.0",
       "@opentelemetry/sdk-trace-node": "^1.24.0",
       "@opentelemetry/semantic-conventions": "^1.24.0",
+      "knip": "^5.88.1",
       "lefthook": "^1.7.18",
       "oxfmt": "^0.6.0",
-      "oxlint": "^0.18.0",
-      "oxlint-tsgolint": "^0.1.0"
+      "oxlint": "^0.18.0"
     }
   },
   "scripts": {
-    "build": "bun run sync:versions && bun run --workspaces build",
+    "build": "bun run --workspaces build",
+    "check": "bun run typecheck && bun run build",
     "clean": "bun run --workspaces clean",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
+    "knip": "knip",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
+    "prebuild": "bun run sync:versions",
+    "preflight": "bun run fmt && bun run lint:fix && bun run fmt:check && bun run lint && bun run knip && bun run test",
     "prepare": "lefthook install",
     "sync:versions": "bun run scripts/sync-versions.ts",
     "test": "bun run --workspaces --if-present test",
-    "typecheck": "bun run sync:versions && bun run --workspaces typecheck"
+    "pretypecheck": "bun run sync:versions",
+    "typecheck": "bun run --workspaces typecheck"
   },
   "devDependencies": {
     "@typescript/native-preview": "catalog:",
+    "knip": "catalog:",
     "lefthook": "catalog:",
     "oxfmt": "catalog:",
-    "oxlint": "catalog:",
-    "oxlint-tsgolint": "catalog:"
+    "oxlint": "catalog:"
   },
   "engines": {
     "node": ">=18"

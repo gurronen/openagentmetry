@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "types": ["bun", "node"],
+    "outDir": "./dist"
+  },
+  "include": ["src"],
+  "references": [{ "path": "../agent-semantic-contracts" }]
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    "packages/agent-semantic-contracts": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/opencode-agentmetry": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/otlp-collector": {
+      "project": ["src/**/*.ts"]
+    }
+  }
+}

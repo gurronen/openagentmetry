@@ -8,6 +8,9 @@
       "@openagentmetry/agent-semantic-contracts": [
         "./packages/agent-semantic-contracts/src/index.ts"
       ],
+      "@openagentmetry/otlp-collector": [
+        "./packages/otlp-collector/src/index.ts"
+      ],
       "@openagentmetry/opencode-agentmetry": [
         "./packages/opencode-agentmetry/src/index.ts"
       ]

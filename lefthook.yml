@@ -1,15 +1,20 @@
 pre-commit:
-  commands:
-    fmt_fix:
-      run: bun run fmt
-    fmt_check:
-      run: bun run fmt:check
-    lint_fix:
-      run: bun run lint:fix
-    lint_check:
-      run: bun run lint
-
-pre-push:
-  commands:
-    tests:
-      run: bun run test
+  jobs:
+    - group:
+        parallel: false
+        jobs:
+          - name: fmt
+            run: bun run fmt
+          - name: lint-fix
+            run: bun run lint:fix
+    - group:
+        parallel: true
+        jobs:
+          - name: fmt-check
+            run: bun run fmt:check
+          - name: lint
+            run: bun run lint
+          - name: knip
+            run: bun run knip
+          - name: test
+            run: bun run test
