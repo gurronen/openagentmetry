@@ -1,11 +1,33 @@
 {
   "name": "@openagentmetry/opencode-agentmetry",
   "version": "0.1.2",
+  "description": "OpenCode plugin that emits OpenTelemetry traces and can auto-start an embedded OTLP collector.",
   "license": "Apache-2.0",
   "type": "module",
   "sideEffects": false,
+  "homepage": "https://github.com/gurronen/openagentmetry/tree/main/packages/opencode-agentmetry",
+  "bugs": {
+    "url": "https://github.com/gurronen/openagentmetry/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gurronen/openagentmetry.git",
+    "directory": "packages/opencode-agentmetry"
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "opentelemetry",
+    "otlp",
+    "tracing",
+    "agent"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -23,10 +45,10 @@
     }
   },
   "scripts": {
-    "build": "tsgo -p tsconfig.json && bun build src/index.ts --target bun --format esm --outfile dist/index.js && bun build src/index.ts --target bun --format cjs --outfile dist/index.cjs && bun build src/core.ts --target node --format esm --outfile dist/core.js && bun build src/core.ts --target node --format cjs --outfile dist/core.cjs",
+    "build": "rm -rf dist && bunx tsc -p tsconfig.json && bun build src/index.ts --target bun --format esm --outfile dist/index.js && bun build src/index.ts --target bun --format cjs --outfile dist/index.cjs && bun build src/core.ts --target node --format esm --outfile dist/core.js && bun build src/core.ts --target node --format cjs --outfile dist/core.cjs",
     "clean": "rm -rf dist",
     "test": "bun test",
-    "typecheck": "tsgo -p tsconfig.json"
+    "typecheck": "bunx tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@openagentmetry/agent-semantic-contracts": "workspace:*",

@@ -11,5 +11,6 @@
     "outDir": "./dist",
   },
   "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.smoke.test.ts"],
   "references": [{ "path": "../agent-semantic-contracts" }, { "path": "../otlp-collector" }],
 }
