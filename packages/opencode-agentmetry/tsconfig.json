@@ -7,9 +7,9 @@
     "declaration": true,
     "declarationMap": true,
     "emitDeclarationOnly": true,
-    "types": ["node"],
+    "types": ["bun", "node"],
     "outDir": "./dist",
   },
   "include": ["src"],
-  "references": [{ "path": "../agent-semantic-contracts" }],
+  "references": [{ "path": "../agent-semantic-contracts" }, { "path": "../otlp-collector" }],
 }

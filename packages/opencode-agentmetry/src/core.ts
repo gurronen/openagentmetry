@@ -211,6 +211,7 @@ export interface SetupTracingOptions {
 export interface SetupTracingResult {
   provider: NodeTracerProvider;
   plugins: OpencodePlugin[];
+  flush: () => Promise<void>;
   shutdown: () => Promise<void>;
 }
 
@@ -234,6 +235,7 @@ export const setupTracing = (options: SetupTracingOptions): SetupTracingResult =
   return {
     provider,
     plugins,
+    flush: () => provider.forceFlush(),
     shutdown: () => provider.shutdown(),
   };
 };

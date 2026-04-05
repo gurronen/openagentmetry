@@ -1,4 +1,5 @@
 import type { Plugin } from "@opencode-ai/plugin";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import path from "node:path";
 
 import {
@@ -8,6 +9,7 @@ import {
   type PermissionPayload,
   type SessionPayload,
 } from "./core";
+import { startEmbeddedCollectorOnce } from "./embedded-collector";
 
 const asRecord = (value: unknown): Record<string, unknown> | undefined => {
   if (typeof value !== "object" || value === null) {
@@ -37,6 +39,19 @@ const getNumber = (...values: unknown[]): number | undefined => {
   return undefined;
 };
 
+const getInteger = (value: string | undefined): number | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return undefined;
+  }
+
+  return parsed;
+};
+
 const getBytes = (value: unknown): number | undefined => {
   if (typeof value === "string") {
     return Buffer.byteLength(value);
@@ -47,6 +62,23 @@ const getBytes = (value: unknown): number | undefined => {
   }
 
   return Buffer.byteLength(JSON.stringify(value));
+};
+
+const getBoolean = (value: string | undefined): boolean | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (["1", "true", "yes", "on"].includes(normalized)) {
+    return true;
+  }
+
+  if (["0", "false", "no", "off"].includes(normalized)) {
+    return false;
+  }
+
+  return undefined;
 };
 
 const getServiceName = (worktree: string): string => {
@@ -60,13 +92,152 @@ const getServiceName = (worktree: string): string => {
   return name.length > 0 ? name : "opencode";
 };
 
-export const OpenAgentmetryPlugin: Plugin = async ({ worktree }) => {
-  const { plugins } = setupTracing({
-    serviceName: getServiceName(worktree),
-    tracerName: getString(process.env.OPENAGENTMETRY_TRACER_NAME),
+type RuntimeMode = "disabled" | "embedded" | "external";
+
+interface TelemetryRuntime {
+  mode: RuntimeMode;
+  exporter?: OTLPTraceExporter;
+  activeOtlpUrl?: string;
+  activeCollectorUrl?: string;
+  activeCollectorUiUrl?: string;
+  bindHost?: string;
+  requestedPort?: number;
+  actualPort?: number;
+  dbPath?: string;
+  forceFlush: boolean;
+}
+
+const deriveOtlpEndpoint = (otlpUrl: string): string => {
+  if (otlpUrl.endsWith("/v1/traces")) {
+    return otlpUrl.slice(0, -"/v1/traces".length);
+  }
+
+  return otlpUrl;
+};
+
+const resolveTelemetryRuntime = (): TelemetryRuntime => {
+  const otlpEnabled = getBoolean(process.env.OPENAGENTMETRY_OTLP_ENABLED);
+  const otlpUrl = getString(process.env.OPENAGENTMETRY_OTLP_URL);
+  const collectorDisabled = getBoolean(process.env.OPENAGENTMETRY_COLLECTOR_DISABLED);
+  const forceFlush = getBoolean(process.env.OPENAGENTMETRY_FORCE_FLUSH) === true;
+
+  if (otlpUrl) {
+    return {
+      mode: "external",
+      exporter: new OTLPTraceExporter({ url: otlpUrl }),
+      activeOtlpUrl: otlpUrl,
+      activeCollectorUrl: deriveOtlpEndpoint(otlpUrl),
+      forceFlush,
+    };
+  }
+
+  if (otlpEnabled === false || collectorDisabled === true) {
+    return {
+      mode: "disabled",
+      forceFlush,
+    };
+  }
+
+  const collector = startEmbeddedCollectorOnce({
+    host: getString(process.env.OPENAGENTMETRY_COLLECTOR_HOST) ?? "0.0.0.0",
+    port: getInteger(process.env.OPENAGENTMETRY_COLLECTOR_PORT),
+    dbPath: getString(process.env.OPENAGENTMETRY_COLLECTOR_DB_PATH),
   });
 
+  return {
+    mode: "embedded",
+    exporter: new OTLPTraceExporter({ url: collector.otlpTracesUrl }),
+    activeOtlpUrl: collector.otlpTracesUrl,
+    activeCollectorUrl: collector.collectorUrl,
+    activeCollectorUiUrl: collector.uiUrl,
+    bindHost: collector.bindHost,
+    requestedPort: collector.requestedPort,
+    actualPort: collector.actualPort,
+    dbPath: collector.dbPath,
+    forceFlush,
+  };
+};
+
+const logRuntimeStartup = async (
+  client: {
+    app?: {
+      log?: (options?: Record<string, unknown>) => Promise<unknown>;
+    };
+  },
+  directory: string,
+  runtime: TelemetryRuntime,
+): Promise<void> => {
+  try {
+    await client.app?.log?.({
+      query: { directory },
+      body: {
+        service: "openagentmetry",
+        level: "info",
+        message: "OpenAgentmetry initialized",
+        extra: {
+          mode: runtime.mode,
+          bindHost: runtime.bindHost,
+          requestedPort: runtime.requestedPort,
+          actualPort: runtime.actualPort,
+          otlpUrl: runtime.activeOtlpUrl,
+          collectorUrl: runtime.activeCollectorUrl,
+          uiUrl: runtime.activeCollectorUiUrl,
+          dbPath: runtime.dbPath,
+        },
+      },
+    });
+  } catch {}
+};
+
+const applyTelemetryShellEnv = (runtime: TelemetryRuntime, env: Record<string, string>): void => {
+  if (runtime.activeOtlpUrl) {
+    env.OPENAGENTMETRY_ACTIVE_OTLP_URL = runtime.activeOtlpUrl;
+  }
+
+  if (runtime.activeCollectorUrl) {
+    env.OPENAGENTMETRY_ACTIVE_COLLECTOR_URL = runtime.activeCollectorUrl;
+  }
+
+  if (runtime.activeCollectorUiUrl) {
+    env.OPENAGENTMETRY_ACTIVE_COLLECTOR_UI_URL = runtime.activeCollectorUiUrl;
+  }
+
+  if (runtime.activeOtlpUrl && env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT === undefined) {
+    if (process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT === undefined) {
+      env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = runtime.activeOtlpUrl;
+    }
+  }
+
+  if (runtime.activeCollectorUrl && env.OTEL_EXPORTER_OTLP_ENDPOINT === undefined) {
+    if (process.env.OTEL_EXPORTER_OTLP_ENDPOINT === undefined) {
+      env.OTEL_EXPORTER_OTLP_ENDPOINT = runtime.activeCollectorUrl;
+    }
+  }
+};
+
+export const OpenAgentmetryPlugin: Plugin = async ({ client, directory, worktree }) => {
+  const runtime = resolveTelemetryRuntime();
+  const tracing = setupTracing({
+    serviceName: getServiceName(worktree),
+    tracerName: getString(process.env.OPENAGENTMETRY_TRACER_NAME),
+    exporter: runtime.exporter,
+  });
+  const { plugins } = tracing;
+
   const instrumentation = plugins[0];
+  const flushIfNeeded = async () => {
+    if (!runtime.forceFlush) {
+      return;
+    }
+
+    await tracing.flush();
+  };
+
+  await logRuntimeStartup(
+    client as { app?: { log?: (options?: Record<string, unknown>) => Promise<unknown> } },
+    directory,
+    runtime,
+  );
 
   return {
     event: async ({ event }) => {
@@ -87,6 +258,7 @@ export const OpenAgentmetryPlugin: Plugin = async ({ worktree }) => {
         };
 
         await instrumentation.hooks[type]?.(sessionPayload);
+        await flushIfNeeded();
         return;
       }
 
@@ -101,6 +273,7 @@ export const OpenAgentmetryPlugin: Plugin = async ({ worktree }) => {
         };
 
         await instrumentation.hooks[type]?.(messagePayload);
+        await flushIfNeeded();
         return;
       }
 
@@ -114,6 +287,7 @@ export const OpenAgentmetryPlugin: Plugin = async ({ worktree }) => {
         };
 
         await instrumentation.hooks["permission.resolved"]?.(permissionPayload);
+        await flushIfNeeded();
         return;
       }
 
@@ -124,7 +298,11 @@ export const OpenAgentmetryPlugin: Plugin = async ({ worktree }) => {
         };
 
         await instrumentation.hooks["file.edited"]?.(filePayload);
+        await flushIfNeeded();
       }
+    },
+    "shell.env": async (_input, output) => {
+      applyTelemetryShellEnv(runtime, output.env);
     },
     "tool.execute.before": async (input, output) => {
       await instrumentation.hooks["tool.execute.before"]?.({
@@ -139,6 +317,7 @@ export const OpenAgentmetryPlugin: Plugin = async ({ worktree }) => {
         executionId: input.callID,
         outputBytes: getBytes(output.output),
       });
+      await flushIfNeeded();
     },
   };
 };
