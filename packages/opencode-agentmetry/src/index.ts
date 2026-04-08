@@ -1,4 +1,4 @@
-import type { Plugin } from "@opencode-ai/plugin";
+import type { Plugin, PluginInput } from "@opencode-ai/plugin";
 import { trace } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import {
@@ -340,12 +340,56 @@ interface TelemetryRuntime {
   forceFlush: boolean;
 }
 
+type PluginClient = PluginInput["client"];
+
+interface CommandConfigEntry {
+  template: string;
+  description?: string;
+  agent?: string;
+  model?: string;
+  subtask?: boolean;
+}
+
+interface CommandConfigInput {
+  command?: Record<string, CommandConfigEntry>;
+}
+
+const OPEN_COLLECTOR_UI_COMMAND = "openagentmetry.open-ui";
+
 const deriveOtlpEndpoint = (otlpUrl: string): string => {
   if (otlpUrl.endsWith("/v1/traces")) {
     return otlpUrl.slice(0, -"/v1/traces".length);
   }
 
   return otlpUrl;
+};
+
+const defaultOpenCollectorUi = async (url: string): Promise<void> => {
+  const cmd =
+    process.platform === "darwin"
+      ? ["open", url]
+      : process.platform === "win32"
+        ? ["cmd", "/c", "start", "", url]
+        : ["xdg-open", url];
+  const subprocess = Bun.spawn({
+    cmd,
+    stdin: "ignore",
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+  const exitCode = await subprocess.exited;
+
+  if (exitCode !== 0) {
+    throw new Error(`Failed to open collector UI with ${cmd[0]}`);
+  }
+};
+
+let openCollectorUi = defaultOpenCollectorUi;
+
+export const __setOpenCollectorUiForTests = (
+  opener: ((url: string) => Promise<void>) | undefined,
+): void => {
+  openCollectorUi = opener ?? defaultOpenCollectorUi;
 };
 
 const resolveTelemetryRuntime = (): TelemetryRuntime => {
@@ -448,6 +492,25 @@ const applyTelemetryShellEnv = (runtime: TelemetryRuntime, env: Record<string, s
   }
 };
 
+const getCollectorUiTarget = (runtime: TelemetryRuntime): string | undefined =>
+  runtime.activeCollectorUiUrl ?? runtime.activeCollectorUrl;
+
+const notifySession = async (
+  client: PluginClient,
+  sessionID: string,
+  text: string,
+): Promise<void> => {
+  try {
+    await client.session.prompt({
+      path: { id: sessionID },
+      body: {
+        noReply: true,
+        parts: [{ type: "text", text }],
+      },
+    });
+  } catch {}
+};
+
 export const OpenAgentmetryPlugin: Plugin = async ({ client, directory, worktree }) => {
   const runtime = resolveTelemetryRuntime();
   const tracing = setupTracing({
@@ -473,6 +536,48 @@ export const OpenAgentmetryPlugin: Plugin = async ({ client, directory, worktree
   );
 
   return {
+    config: async (input: CommandConfigInput) => {
+      if (!input.command) {
+        input.command = {};
+      }
+
+      input.command[OPEN_COLLECTOR_UI_COMMAND] = {
+        template: "Open the OpenAgentmetry collector UI in your default browser.",
+        description: "Open OpenAgentmetry collector UI",
+      };
+    },
+    "command.execute.before": async (input) => {
+      if (input.command !== OPEN_COLLECTOR_UI_COMMAND) {
+        return;
+      }
+
+      const target = getCollectorUiTarget(runtime);
+      if (!target) {
+        await notifySession(
+          client,
+          input.sessionID,
+          "OpenAgentmetry collector UI is not available because OTLP export is disabled.",
+        );
+        throw new Error("Command handled by OpenAgentmetry plugin");
+      }
+
+      try {
+        await openCollectorUi(target);
+        await notifySession(
+          client,
+          input.sessionID,
+          `Opened OpenAgentmetry collector UI: ${target}`,
+        );
+      } catch {
+        await notifySession(
+          client,
+          input.sessionID,
+          `Unable to open the browser automatically. Open this URL manually: ${target}`,
+        );
+      }
+
+      throw new Error("Command handled by OpenAgentmetry plugin");
+    },
     event: async ({ event }) => {
       const payload = asRecord(event);
       const type = getString(payload?.type);

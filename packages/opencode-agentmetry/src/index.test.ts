@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { __resetEmbeddedCollectorForTests, getEmbeddedCollectorState } from "./embedded-collector";
-import { OpenAgentmetryPlugin } from "./index";
+import { __setOpenCollectorUiForTests, OpenAgentmetryPlugin } from "./index";
 
 const createDbPath = (): string =>
   join(mkdtempSync(join(tmpdir(), "openagentmetry-plugin-")), "traces.sqlite");
@@ -42,6 +42,7 @@ const withEnv = async (
 
 const createPluginInput = () => {
   const logs: Array<Record<string, unknown>> = [];
+  const prompts: Array<Record<string, unknown>> = [];
 
   return {
     input: {
@@ -49,6 +50,12 @@ const createPluginInput = () => {
         app: {
           log: async (options?: Record<string, unknown>) => {
             logs.push(options ?? {});
+            return { data: true };
+          },
+        },
+        session: {
+          prompt: async (options?: Record<string, unknown>) => {
+            prompts.push(options ?? {});
             return { data: true };
           },
         },
@@ -60,11 +67,13 @@ const createPluginInput = () => {
       $: {} as any,
     },
     logs,
+    prompts,
   };
 };
 
 afterEach(() => {
   __resetEmbeddedCollectorForTests();
+  __setOpenCollectorUiForTests(undefined);
 });
 
 describe("OpenAgentmetryPlugin", () => {
@@ -158,6 +167,103 @@ describe("OpenAgentmetryPlugin", () => {
 
         expect(env.OTEL_EXPORTER_OTLP_ENDPOINT).toBe("http://existing-endpoint");
         expect(env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT).toBe("http://existing-traces");
+      },
+    );
+  });
+
+  test("registers a command to open the collector UI", async () => {
+    await withEnv(
+      {
+        OPENAGENTMETRY_OTLP_URL: undefined,
+        OPENAGENTMETRY_OTLP_ENABLED: undefined,
+        OPENAGENTMETRY_COLLECTOR_DISABLED: undefined,
+        OPENAGENTMETRY_COLLECTOR_PORT: "0",
+        OPENAGENTMETRY_COLLECTOR_DB_PATH: createDbPath(),
+      },
+      async () => {
+        const { input } = createPluginInput();
+        const plugin = await OpenAgentmetryPlugin(input);
+        const config: { command?: Record<string, { template: string; description: string }> } = {};
+
+        await plugin.config?.(config as never);
+
+        expect(config.command?.["openagentmetry.open-ui"]).toEqual({
+          template: "Open the OpenAgentmetry collector UI in your default browser.",
+          description: "Open OpenAgentmetry collector UI",
+        });
+      },
+    );
+  });
+
+  test("opens the collector UI command target and notifies the session", async () => {
+    await withEnv(
+      {
+        OPENAGENTMETRY_OTLP_URL: undefined,
+        OPENAGENTMETRY_OTLP_ENABLED: undefined,
+        OPENAGENTMETRY_COLLECTOR_DISABLED: undefined,
+        OPENAGENTMETRY_COLLECTOR_PORT: "0",
+        OPENAGENTMETRY_COLLECTOR_DB_PATH: createDbPath(),
+      },
+      async () => {
+        const openedUrls: string[] = [];
+        __setOpenCollectorUiForTests(async (url) => {
+          openedUrls.push(url);
+        });
+
+        const { input, prompts } = createPluginInput();
+        const plugin = await OpenAgentmetryPlugin(input);
+
+        await expect(
+          plugin["command.execute.before"]?.(
+            {
+              command: "openagentmetry.open-ui",
+              sessionID: "session-1",
+              arguments: "",
+            },
+            {
+              parts: [],
+            },
+          ),
+        ).rejects.toThrow("Command handled by OpenAgentmetry plugin");
+
+        expect(openedUrls).toHaveLength(1);
+        expect(openedUrls[0]).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/$/);
+        expect(prompts).toHaveLength(1);
+      },
+    );
+  });
+
+  test("reports when the collector UI command is unavailable", async () => {
+    await withEnv(
+      {
+        OPENAGENTMETRY_OTLP_URL: undefined,
+        OPENAGENTMETRY_OTLP_ENABLED: "false",
+        OPENAGENTMETRY_COLLECTOR_DISABLED: undefined,
+      },
+      async () => {
+        const openedUrls: string[] = [];
+        __setOpenCollectorUiForTests(async (url) => {
+          openedUrls.push(url);
+        });
+
+        const { input, prompts } = createPluginInput();
+        const plugin = await OpenAgentmetryPlugin(input);
+
+        await expect(
+          plugin["command.execute.before"]?.(
+            {
+              command: "openagentmetry.open-ui",
+              sessionID: "session-1",
+              arguments: "",
+            },
+            {
+              parts: [],
+            },
+          ),
+        ).rejects.toThrow("Command handled by OpenAgentmetry plugin");
+
+        expect(openedUrls).toHaveLength(0);
+        expect(prompts).toHaveLength(1);
       },
     );
   });
