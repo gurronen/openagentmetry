@@ -9,6 +9,7 @@
     "emitDeclarationOnly": true,
     "types": ["bun", "node"],
     "outDir": "./dist",
+    "tsBuildInfoFile": "./.tsgo/opencode-agentmetry.tsbuildinfo",
   },
   "include": ["src"],
   "exclude": ["src/**/*.test.ts", "src/**/*.smoke.test.ts"],

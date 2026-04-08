@@ -100,6 +100,7 @@ describe("OpenCode smoke test", () => {
       },
       async () => {
         const opencode = await createOpencode({
+          port: 0,
           config: {
             permission: {
               edit: "allow",
@@ -171,25 +172,33 @@ describe("OpenCode smoke test", () => {
             ?.split("=")[1] ?? "";
 
         expect(collectorUrl).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
+        const tracesUrl = new URL(`${collectorUrl}/api/traces`);
+        tracesUrl.searchParams.set("attr.ai.session.id", sessionData.id);
         const traces = await waitFor(
           async () =>
-            (await fetch(`${collectorUrl}/api/traces`)).json() as Promise<
+            (await fetch(tracesUrl)).json() as Promise<
               Array<{ traceId: string; rootSpanName: string; rootServiceName: string | null }>
             >,
           (result) => result.length > 0,
         );
 
-        expect(traces.some((trace) => trace.rootSpanName === "session.created")).toBeTrue();
-
         const detailsResponse = await fetch(`${collectorUrl}/api/traces/${traces[0].traceId}`);
         const traceDetails = (await detailsResponse.json()) as {
           spans: Array<{
+            spanName: string;
             spanAttributes: Record<string, unknown>;
             resourceAttributes: Record<string, unknown>;
           }>;
         };
 
         expect(traceDetails.spans.length).toBeGreaterThan(0);
+        expect(
+          traceDetails.spans.some(
+            (span) =>
+              typeof span.spanAttributes["ai.session.id"] === "string" &&
+              span.spanAttributes["ai.session.id"] === sessionData.id,
+          ),
+        ).toBeTrue();
         expect(
           traceDetails.spans.some(
             (span) =>

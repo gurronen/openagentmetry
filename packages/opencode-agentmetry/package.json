@@ -26,29 +26,23 @@
     "access": "public"
   },
   "files": [
-    "dist",
+    "dist/index.d.ts",
+    "dist/index.d.ts.map",
+    "dist/index.js",
     "README.md"
   ],
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    },
-    "./core": {
-      "types": "./dist/core.d.ts",
-      "import": "./dist/core.js",
-      "require": "./dist/core.cjs"
+      "import": "./dist/index.js"
     }
   },
   "scripts": {
-    "build": "rm -rf dist && bunx tsc -p tsconfig.json && bun build src/index.ts --target bun --format esm --outfile dist/index.js && bun build src/index.ts --target bun --format cjs --outfile dist/index.cjs && bun build src/core.ts --target node --format esm --outfile dist/core.js && bun build src/core.ts --target node --format cjs --outfile dist/core.cjs",
-    "clean": "rm -rf dist",
+    "build": "rm -rf dist .tsgo && mkdir -p .tsgo && tsgo -p tsconfig.json && bun build src/index.ts --target bun --format esm --outfile dist/index.js",
+    "clean": "rm -rf dist .tsgo",
     "test": "bun test",
-    "typecheck": "bunx tsc --noEmit -p tsconfig.json"
+    "typecheck": "mkdir -p .tsgo && tsgo -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@openagentmetry/agent-semantic-contracts": "workspace:*",

@@ -63,4 +63,3 @@ export OPENAGENTMETRY_COLLECTOR_PORT="4318"
 ## Notes
 
 - The plugin runtime is Bun-oriented because the embedded collector uses Bun APIs.
-- The package also exports `./core` if you want the tracing setup without the OpenCode plugin wrapper.
